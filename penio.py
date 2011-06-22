@@ -42,6 +42,9 @@ class PasswordError(Exception):
 class TitleError(Exception):
 	pass
 
+class FormatError(Exception):
+	pass
+
 class ResponseError(Exception):
 	pass
 
@@ -158,13 +161,19 @@ Deletes a page from the server
 	else:
 		raise ResponseError
 
-def get_json(key, page_name, password=None):
+def get_page(key, page_name, password=None, page_format=""):
 	"""
-If the page exists, it is returned in json format
+If the page exists, it is returned in the chosen format, or html if no format
+is specified.
 	"""
 	validate_name(page_name)
 	conn = HttpConnection()
-	path = "/pages/%s/json" % page_name
+	if page_format in ("", "html"):
+		path = "/pages/%s" % page_name
+	elif page_format in ('json', 'xml'):
+		path = "/pages/%s/%s" % (page_name, page_format)
+	else:
+		raise FormatError()
 	if password:
 		validate_password(password)
 		headers = make_headers(key, user=page_name, password=password)
