@@ -9,7 +9,10 @@
 ## The API key may be got in http://pen.io/gen_api_key.php
 ##
 
-import httplib, urllib
+import httplib
+import urllib
+import base64
+
 
 PENIO_HOST = "pen.io"
 MIN_NAME = 2
@@ -25,6 +28,10 @@ PAGE_AVAILABLE=2
 PAGE_CREATED=3
 PAGE_CONFLICT=4
 VALIDATION_ERROR=5
+PAGE_DELETED=6
+PAGE_NOT_FOUND=7
+AUTH_REQUIRED=8
+AUTH_ERROR=9
 
 class PageNameError(Exception):
 	pass
@@ -41,7 +48,7 @@ class ResponseError(Exception):
 def HttpConnection():
 	return httplib.HTTPConnection(PENIO_HOST)
 
-def make_headers(key, create=False):
+def make_headers(key, create=False, user=None, password=None):
 	"""
 Returns a dictionary with http headers
 	"""
@@ -50,6 +57,9 @@ Returns a dictionary with http headers
 	headers.update({"api-key": key})
 	if create:
 		headers.update({"Content-type": "application/x-www-form-urlencoded"})
+	if user and password:
+		b64s = base64.encodestring("%s:%s" % (user, password))[:-1]
+		headers.update({"Authorization": "Basic %s" % b64s})
 	return headers
 
 def validate_name(page_name):
@@ -125,4 +135,27 @@ Creates a new page in the server
 		return VALIDATION_ERROR
 	else:
 		raise ResponseError
+
+def delete_page(key, page_name, password):
+	"""
+Deletes a page from the server
+	"""
+	validate_name(page_name)
+	validate_password(password)
+	conn = HttpConnection()
+	path = "/pages/%s" % page_name
+	headers = make_headers(key, user=page_name, password=password)
+	conn.request("DELETE", path, headers=headers)
+	response = conn.getresponse()
+	if response.status == 204:
+		return PAGE_DELETED
+	elif response.status == 404:
+		return PAGE_NOT_FOUND
+	elif response.status == 401:
+		return AUTH_REQUIRED
+	elif response.status == 403:
+		return AUTH_ERROR
+	else:
+		raise ResponseError
+
 
