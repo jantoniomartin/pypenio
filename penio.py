@@ -24,6 +24,9 @@ PAGE_AVAILABLE=2
 class PageNameError(Exception):
 	pass
 
+class PasswordError(Exception):
+	pass
+
 class ResponseError(Exception):
 	pass
 
@@ -46,6 +49,15 @@ Returns true if the page name is valid.
 	assert isinstance(page_name, str)
 	if len(page_name) < MIN_NAME or len(page_name) > MAX_NAME:
 		raise PageNameError()
+	return True
+
+def validate_password(password):
+	"""
+Returns true if the password is valid.
+	"""
+	assert isinstance(password, str)
+	if len(password) < MIN_PWD or len(password) > MAX_PWD:
+		raise PasswordError()
 	return True
 
 def check_page(key, page_name):
