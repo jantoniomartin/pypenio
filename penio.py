@@ -14,6 +14,8 @@ import httplib
 PENIO_HOST = "pen.io"
 MIN_NAME = 2
 MAX_NAME = 60
+MIN_PWD = 1
+MAX_PWD = 30
 
 ## exit codes
 PAGE_EXISTS=1
@@ -37,13 +39,21 @@ Returns a dictionary with http headers
 	headers.update({"api-key": key})
 	return headers
 
+def validate_name(page_name):
+	"""
+Returns true if the page name is valid.
+	"""
+	assert isinstance(page_name, str)
+	if len(page_name) < MIN_NAME or len(page_name) > MAX_NAME:
+		raise PageNameError()
+	return True
+
 def check_page(key, page_name):
 	"""
 Returns true if the page exists, false if it doesn't
 	"""
 	assert isinstance(page_name, str)
-	if len(page_name) < MIN_NAME or len(page_name) > MAX_NAME:
-		raise PageNameError()
+	validate_name(page_name)
 	conn = HttpConnection()
 	path = "/pages/%s" % page_name
 	headers = make_headers(key)
