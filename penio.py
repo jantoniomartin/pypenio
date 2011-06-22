@@ -158,4 +158,29 @@ Deletes a page from the server
 	else:
 		raise ResponseError
 
+def get_json(key, page_name, password=None):
+	"""
+If the page exists, it is returned in json format
+	"""
+	validate_name(page_name)
+	conn = HttpConnection()
+	path = "/pages/%s/json" % page_name
+	if password:
+		validate_password(password)
+		headers = make_headers(key, user=page_name, password=password)
+	else:
+		headers = make_headers(key)
+	conn.request("GET", path, headers=headers)
+	response = conn.getresponse()
+	if response.status == 200:
+		return response.read()
+	elif response.status == 404:
+		return PAGE_NOT_FOUND
+	elif response.status == 401:
+		return AUTH_REQUIRED
+	elif response.status == 403:
+		return AUTH_ERROR
+	else:
+		raise ResponseError
+
 
