@@ -32,6 +32,8 @@ PAGE_DELETED=6
 PAGE_NOT_FOUND=7
 AUTH_REQUIRED=8
 AUTH_ERROR=9
+PAGE_MODIFIED=10
+PAGE_NAME_MODIFIED=11
 
 class PageNameError(Exception):
 	pass
@@ -138,6 +140,42 @@ Creates a new page in the server
 		return VALIDATION_ERROR
 	else:
 		raise ResponseError
+
+def update_page(key, page_name, password, title=u"", content=u""):
+	"""
+Changes the contents of a page
+	"""
+	validate_name(page_name)
+	validate_password(password)
+	conn = HttpConnection()
+	path = "/pages/%s" % page_name
+	headers = make_headers(key, user=page_name, password=password)
+	params_dict = {}
+	if title != u"":
+		validate_title(title)
+		params_dict.update({"title": title})
+	if content != u"":
+		params_dict.update({"content": content})
+	params = urllib.urlencode(params_dict)
+	conn.request("PUT", path, params, headers)
+	response = conn.getresponse()
+	if response.status == 204:
+		return PAGE_MODIFIED
+	elif response.status == 301:
+		return PAGE_NAME_MODIFIED
+	elif response.status == 409:
+		return PAGE_CONFLICT
+	elif response.status == 412:
+		return VALIDATION_ERROR
+	elif response.status == 404:
+		return PAGE_NOT_FOUND
+	elif response.status == 401:
+		return AUTH_REQUIRED
+	elif response.status == 403:
+		return AUTH_ERROR
+	else:
+		raise ResponseError
+
 
 def delete_page(key, page_name, password):
 	"""
