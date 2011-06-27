@@ -3,6 +3,8 @@ pypenio, a Python interface to pen.io public API
 At this moment, this is only an experimental project for playing with the API
 of http://pen.io
 
+How to use this interface: http://pypenio.pen.io
+
 The API documentation may be found in http://pen.io/api
 
 pen.io is copyright of Pen.io Inc.
