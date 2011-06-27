@@ -98,23 +98,30 @@ def check_page(key, page_name):
 	"""
 Returns true if the page exists, false if it doesn't
 	"""
+	exit_codes = {
+		404: PAGE_AVAILABLE,
+		200: PAGE_EXISTS,
+	}
 	validate_name(page_name)
 	conn = HttpConnection()
 	path = "/pages/%s" % page_name
 	headers = make_headers(key)
 	conn.request("HEAD", path, headers=headers)
 	response = conn.getresponse()
-	if response.status == 404:
-		return PAGE_AVAILABLE
-	elif response.status == 200:
-		return PAGE_EXISTS
-	else:
+	try:
+		return exit_codes[response.status]
+	except KeyError:
 		raise ResponseError()
 
 def create_page(key, page_name, password, title=u"", content=u""):
 	"""
 Creates a new page in the server
 	"""
+	exit_codes = {
+		201: PAGE_CREATED,
+		409: PAGE_CONFLICT,
+		412: VALIDATION_ERROR,
+	}
 	validate_name(page_name)
 	validate_password(password)
 	conn = HttpConnection()
@@ -132,19 +139,24 @@ Creates a new page in the server
 	params = urllib.urlencode(params_dict)
 	conn.request("POST", path, params, headers)
 	response = conn.getresponse()
-	if response.status == 201:
-		return PAGE_CREATED
-	elif response.status == 409:
-		return PAGE_CONFLICT
-	elif response.status == 412:
-		return VALIDATION_ERROR
-	else:
-		raise ResponseError
+	try:
+		return exit_codes[response.status]
+	except KeyError:
+		raise ResponseError()
 
 def update_page(key, page_name, password, title=u"", content=u""):
 	"""
 Changes the contents of a page
 	"""
+	exit_codes = {
+		204: PAGE_MODIFIED,
+		301: PAGE_NAME_MODIFIED,
+		409: PAGE_CONFLICT,
+		412: VALIDATION_ERROR,
+		404: PAGE_NOT_FOUND,
+		401: AUTH_REQUIRED,
+		403: AUTH_ERROR,
+	}
 	validate_name(page_name)
 	validate_password(password)
 	conn = HttpConnection()
@@ -159,28 +171,21 @@ Changes the contents of a page
 	params = urllib.urlencode(params_dict)
 	conn.request("PUT", path, params, headers)
 	response = conn.getresponse()
-	if response.status == 204:
-		return PAGE_MODIFIED
-	elif response.status == 301:
-		return PAGE_NAME_MODIFIED
-	elif response.status == 409:
-		return PAGE_CONFLICT
-	elif response.status == 412:
-		return VALIDATION_ERROR
-	elif response.status == 404:
-		return PAGE_NOT_FOUND
-	elif response.status == 401:
-		return AUTH_REQUIRED
-	elif response.status == 403:
-		return AUTH_ERROR
-	else:
-		raise ResponseError
-
+	try:
+		return exit_codes[response.status]
+	except KeyError:
+		raise ResponseError()
 
 def delete_page(key, page_name, password):
 	"""
 Deletes a page from the server
 	"""
+	exit_codes = {
+		204: PAGE_DELETED,
+		404: PAGE_NOT_FOUND,
+		401: AUTH_REQUIRED,
+		403: AUTH_ERROR,
+	}
 	validate_name(page_name)
 	validate_password(password)
 	conn = HttpConnection()
@@ -188,22 +193,21 @@ Deletes a page from the server
 	headers = make_headers(key, user=page_name, password=password)
 	conn.request("DELETE", path, headers=headers)
 	response = conn.getresponse()
-	if response.status == 204:
-		return PAGE_DELETED
-	elif response.status == 404:
-		return PAGE_NOT_FOUND
-	elif response.status == 401:
-		return AUTH_REQUIRED
-	elif response.status == 403:
-		return AUTH_ERROR
-	else:
-		raise ResponseError
+	try:
+		return exit_codes[response.status]
+	except KeyError:
+		raise ResponseError()
 
 def get_page(key, page_name, password=None, page_format=""):
 	"""
 If the page exists, it is returned in the chosen format, or html if no format
 is specified.
 	"""
+	exit_codes = {
+		404: PAGE_NOT_FOUND,
+		401: AUTH_REQUIRED,
+		403: AUTH_ERROR,
+	}
 	validate_name(page_name)
 	conn = HttpConnection()
 	if page_format in ("", "html"):
@@ -221,13 +225,8 @@ is specified.
 	response = conn.getresponse()
 	if response.status == 200:
 		return response.read()
-	elif response.status == 404:
-		return PAGE_NOT_FOUND
-	elif response.status == 401:
-		return AUTH_REQUIRED
-	elif response.status == 403:
-		return AUTH_ERROR
 	else:
-		raise ResponseError
-
-
+		try:
+			return exit_codes[response.status]
+		except KeyError:
+			raise ResponseError()
