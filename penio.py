@@ -71,7 +71,7 @@ def validate_name(page_name):
 	"""
 Returns true if the page name is valid.
 	"""
-	assert isinstance(page_name, str)
+	assert isinstance(page_name, unicode)
 	if len(page_name) < MIN_NAME or len(page_name) > MAX_NAME:
 		raise PageNameError()
 	return True
@@ -80,7 +80,7 @@ def validate_password(password):
 	"""
 Returns true if the password is valid.
 	"""
-	assert isinstance(password, str)
+	assert isinstance(password, unicode)
 	if len(password) < MIN_PWD or len(password) > MAX_PWD:
 		raise PasswordError()
 	return True
